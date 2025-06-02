@@ -6,7 +6,7 @@
         Osman de León   // Creación de CRUDS
         Olivier Viau    // Datos de prueba, solución de errores
         Milton Polanco  //Creación de CRUDS
-        Adrián Gonzáles  //Planificador de base de datos
+        Adrián González  //Planificador de base de datos
 
 
     Objetivo: ste programa es un Sistema de Gestión Universitaria (SGU) completo que maneja todas las operaciones académicas básicas de una universidad. 

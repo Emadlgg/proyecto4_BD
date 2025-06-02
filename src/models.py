@@ -1,9 +1,9 @@
-from sqlalchemy import create_engine, Column, Integer, String, Date, Numeric, ForeignKey, Enum, Boolean, Time, Text, CheckConstraint, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Date, Numeric, ForeignKey, Enum, Boolean, Time, Text, CheckConstraint, DateTime, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker, validates
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import os
 from dotenv import load_dotenv
