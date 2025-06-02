@@ -1,3 +1,30 @@
+'''
+            DOCUMENTACIÓN INTERNA
+
+
+    Autores: 
+        Osman de León   // Creación de CRUDS
+        Olivier Viau    // Datos de prueba, solución de errores
+        Milton Polanco  //Creación de CRUDS
+        Adrián Gonzáles  //Planificador de base de datos
+
+
+    Objetivo: ste programa es un Sistema de Gestión Universitaria (SGU) completo que maneja todas las operaciones académicas básicas de una universidad. 
+
+    Estructura:
+        schema.sql: Estructura de la base de datos con tablas, tipos personalizados, vistas, funciones, triggers e índices.
+
+        models.py: Modelos ORM (SQLAlchemy) que representan las tablas de la base de datos.
+
+        cruds.py: Implementa operaciones CRUD (Create, Read, Update, Delete) para cada entidad del sistema.
+
+        main.py: Interfaz de línea de comandos para interactuar con el sistema.
+
+        reports.py: Genera reportes en formato CSV.
+
+        validation.py: Contiene validaciones y triggers a nivel de aplicación.
+'''
+
 from cruds import UniversityCRUD
 from models import session
 from datetime import datetime

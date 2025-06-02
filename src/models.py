@@ -8,7 +8,6 @@ import re
 import os
 from dotenv import load_dotenv
 
-# Cargar variables de entorno
 load_dotenv()
 
 # Configuración de la base de datos
@@ -48,9 +47,6 @@ class ThesisStatus(PyEnum):
     APPROVED = "Aprobada"
     FAILED = "Reprobada"
 
-# =============================================
-# MODELOS DE TABLAS (20+)
-# =============================================
 
 class Faculty(Base):
     __tablename__ = 'facultad'
