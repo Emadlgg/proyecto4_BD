@@ -1,5 +1,8 @@
-DROP DATABASE IF EXISTS proyecto4_sgu
-CREATE DATABASE proyecto4_sgu
+DROP DATABASE IF EXISTS proyecto4_sgu;
+CREATE DATABASE proyecto4_sgu;
+
+-- Conectarse a la base de datos
+\c proyecto4_sgu;
 
 -- TIPOS DE DATOS PERSONALIZADOS
 CREATE TYPE tipo_semestre AS ENUM ('Verano', 'Primer Semestre', 'Segundo Semestre');
@@ -13,9 +16,11 @@ CREATE TYPE dia_semana AS ENUM ('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vier
 -- Facultades
 CREATE TABLE facultad (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
     ubicacion VARCHAR(100) NOT NULL,
-    fecha_fundacion DATE
+    fecha_fundacion DATE,
+    telefono VARCHAR(15),
+    decano VARCHAR(100)
 );
 
 -- Departamentos
@@ -24,16 +29,19 @@ CREATE TABLE departamento (
     nombre VARCHAR(100) NOT NULL,
     facultad_id INTEGER NOT NULL REFERENCES facultad(id),
     telefono VARCHAR(15),
-    presupuesto DECIMAL(10,2)
+    presupuesto DECIMAL(12,2) CHECK (presupuesto >= 0),
+    jefe VARCHAR(100),
+    email VARCHAR(100)
 );
 
 -- Carreras
 CREATE TABLE carrera (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
     facultad_id INTEGER NOT NULL REFERENCES facultad(id),
-    duracion_anos INTEGER NOT NULL CHECK (duracion_anos > 0),
-    creditos_totales INTEGER NOT NULL
+    duracion_anos INTEGER NOT NULL CHECK (duracion_anos > 0 AND duracion_anos <= 6),
+    creditos_totales INTEGER NOT NULL,
+    titulo VARCHAR(50)
 );
 
 -- Estudiantes
@@ -46,7 +54,8 @@ CREATE TABLE estudiante (
     telefono VARCHAR(15),
     email VARCHAR(100) UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
     carrera_id INTEGER REFERENCES carrera(id),
-    fecha_ingreso DATE NOT NULL DEFAULT CURRENT_DATE
+    fecha_ingreso DATE NOT NULL DEFAULT CURRENT_DATE,
+    estado VARCHAR(20) DEFAULT 'Activo' CHECK (estado IN ('Activo', 'Inactivo', 'Graduado'))
 );
 
 -- Profesores
@@ -57,18 +66,21 @@ CREATE TABLE profesor (
     especializacion VARCHAR(100),
     departamento_id INTEGER NOT NULL REFERENCES departamento(id),
     fecha_contratacion DATE NOT NULL,
-    salario DECIMAL(10,2) CHECK (salario > 0)
+    salario DECIMAL(10,2) CHECK (salario > 0),
+    email VARCHAR(100) UNIQUE,
+    activo BOOLEAN DEFAULT TRUE
 );
 
 -- Cursos
 CREATE TABLE curso (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
     codigo VARCHAR(10) UNIQUE NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     creditos INTEGER NOT NULL CHECK (creditos > 0),
     descripcion TEXT,
     carrera_id INTEGER NOT NULL REFERENCES carrera(id),
-    prerequisito_id INTEGER REFERENCES curso(id)
+    prerequisito_id INTEGER REFERENCES curso(id),
+    departamento_id INTEGER REFERENCES departamento(id)
 );
 
 -- Aulas
@@ -81,7 +93,7 @@ CREATE TABLE aula (
     tiene_proyector BOOLEAN DEFAULT FALSE
 );
 
--- Matrículas
+-- Matrículas (Enrollments)
 CREATE TABLE matricula (
     estudiante_id INTEGER NOT NULL REFERENCES estudiante(id),
     curso_id INTEGER NOT NULL REFERENCES curso(id),
@@ -92,7 +104,7 @@ CREATE TABLE matricula (
     PRIMARY KEY (estudiante_id, curso_id, semestre)
 );
 
--- Horarios
+-- Horarios (Schedules)
 CREATE TABLE horario (
     id SERIAL PRIMARY KEY,
     curso_id INTEGER NOT NULL REFERENCES curso(id),
@@ -103,7 +115,7 @@ CREATE TABLE horario (
     CHECK (hora_fin > hora_inicio)
 );
 
--- Asignación de profesores
+-- Asignación de profesores (Course Assignments)
 CREATE TABLE asignacion_profesor (
     profesor_id INTEGER NOT NULL REFERENCES profesor(id),
     curso_id INTEGER NOT NULL REFERENCES curso(id),
@@ -284,6 +296,21 @@ LEFT JOIN
     profesor p ON ap.profesor_id = p.id
 GROUP BY 
     c.id, c.codigo, c.nombre, cr.nombre, f.nombre, c.creditos, c.descripcion;
+
+-- Vista 3: Facultades con información detallada
+CREATE VIEW vista_facultades_detalladas AS
+SELECT 
+    f.id,
+    f.nombre,
+    f.ubicacion,
+    f.fecha_fundacion,
+    f.decano,
+    COUNT(d.id) as total_departamentos,
+    COUNT(DISTINCT c.id) as total_carreras
+FROM facultad f
+LEFT JOIN departamento d ON f.id = d.facultad_id
+LEFT JOIN carrera c ON f.id = c.facultad_id
+GROUP BY f.id, f.nombre, f.ubicacion, f.fecha_fundacion, f.decano;
 
 -- FUNCIONES (3+ REQUERIDAS)
 -- Función 1: Calcular promedio de un estudiante

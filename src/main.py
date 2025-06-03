@@ -50,16 +50,18 @@ class UniversitySystem:
             print(f"{key}. {option['label']}")
         print("=" * 50)
     
-    def get_input(self, prompt, input_type=str, validation=None):
+    def get_input(self, prompt, input_type=str, validation=None, required=True):
         while True:
             try:
                 value = input(prompt)
-                if not value:
+                if not value and required:
                     raise ValueError("Este campo es requerido")
+                elif not value and not required:
+                    return None
                 
-                converted = input_type(value)
+                converted = input_type(value) if value else None
                 
-                if validation and not validation(converted):
+                if validation and converted is not None and not validation(converted):
                     raise ValueError("Valor no válido")
                 
                 return converted
@@ -132,7 +134,8 @@ class UniversitySystem:
                 foundation_date=foundation_date,
                 dean=dean
             )
-            print(f"\nFacultad '{faculty.name}' creada exitosamente con ID: {faculty.id}")
+            # CAMBIAR: usar .nombre en lugar de .name
+            print(f"\nFacultad '{faculty.nombre}' creada exitosamente con ID: {faculty.id}")
         except Exception as e:
             print(f"\nError al crear facultad: {str(e)}")
         input("\nPresione Enter para continuar...")
@@ -144,17 +147,53 @@ class UniversitySystem:
         if not faculties:
             print("No hay facultades registradas.")
         else:
-            print("{:<5} {:<30} {:<20} {:<15}".format("ID", "Nombre", "Ubicación", "Decano"))
-            print("-" * 70)
+            print("{:<5} {:<30} {:<20} {:<15} {:<15}".format("ID", "Nombre", "Ubicación", "Fundación", "Decano"))
+            print("-" * 85)
             for faculty in faculties:
-                print("{:<5} {:<30} {:<20} {:<15}".format(
+                foundation_date = faculty.fecha_fundacion.strftime('%Y-%m-%d') if faculty.fecha_fundacion else 'N/A'
+                print("{:<5} {:<30} {:<20} {:<15} {:<15}".format(
                     faculty.id,
-                    faculty.name,
-                    faculty.location,
-                    faculty.dean or "N/A"
+                    faculty.nombre,
+                    faculty.ubicacion,
+                    foundation_date,
+                    faculty.decano or "N/A"
                 ))
         input("\nPresione Enter para continuar...")
     
+    def search_faculty(self):
+        self.display_header("BUSCAR FACULTAD")
+        try:
+            faculty_id = self.get_input("ID de la facultad: ", input_type=int)
+            faculty = self.crud.faculty.get_faculty(faculty_id)
+            
+            if faculty:
+                print(f"\nFacultad encontrada:")
+                print(f"ID: {faculty.id}")
+                print(f"Nombre: {faculty.nombre}")
+                print(f"Ubicación: {faculty.ubicacion}")
+                print(f"Decano: {faculty.decano or 'N/A'}")
+            else:
+                print("Facultad no encontrada.")
+        except Exception as e:
+            print(f"\nError al buscar facultad: {str(e)}")
+        input("\nPresione Enter para continuar...")
+
+    def department_menu(self):
+        print("Funcionalidad de departamentos en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
+    def major_menu(self):
+        print("Funcionalidad de carreras en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
+    def classroom_menu(self):
+        print("Funcionalidad de aulas en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
+    def professor_menu(self):
+        print("Funcionalidad de profesores en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
     def student_menu(self):
         while True:
             self.display_header("GESTIÓN DE ESTUDIANTES")
@@ -188,15 +227,16 @@ class UniversitySystem:
             phone = self.get_input("Teléfono (opcional): ", required=False)
             
             student = self.crud.student.create_student(
-                first_name=first_name,
-                last_name=last_name,
-                birth_date=birth_date,
+                # CAMBIAR: usar los nombres correctos de los parámetros
+                nombre=first_name,
+                apellido=last_name,
+                fecha_nacimiento=birth_date,
                 email=email,
-                major_id=major_id,
-                address=address,
-                phone=phone
+                carrera_id=major_id,
+                direccion=address,
+                telefono=phone
             )
-            print(f"\nEstudiante '{first_name} {last_name}' registrado exitosamente con ID: {student.id}")
+            print(f"\nEstudiante '{student.nombre} {student.apellido}' registrado exitosamente con ID: {student.id}")
         except Exception as e:
             print(f"\nError al registrar estudiante: {str(e)}")
         input("\nPresione Enter para continuar...")
@@ -218,6 +258,62 @@ class UniversitySystem:
             print(f"\nError al matricular estudiante: {str(e)}")
         input("\nPresione Enter para continuar...")
     
+    def update_student(self):
+        self.display_header("ACTUALIZAR ESTUDIANTE")
+        try:
+            student_id = self.get_input("ID del estudiante a actualizar: ", input_type=int)
+            student = self.crud.student.get_student(student_id)
+            
+            if not student:
+                print("Estudiante no encontrado.")
+                return
+                
+            print(f"\nEstudiante actual: {student.nombre} {student.apellido}")
+            print("Deje en blanco los campos que no desea modificar:")
+            
+            nombre = self.get_input(f"Nombres ({student.nombre}): ", required=False) or student.nombre
+            apellido = self.get_input(f"Apellidos ({student.apellido}): ", required=False) or student.apellido
+            email = self.get_input(f"Email ({student.email}): ", required=False) or student.email
+            
+            updated_student = self.crud.student.update_student(
+                student_id, 
+                nombre=nombre, 
+                apellido=apellido, 
+                email=email
+            )
+            print(f"\n✅ Estudiante actualizado: {updated_student.nombre} {updated_student.apellido}")
+            
+        except Exception as e:
+            print(f"\n❌ Error al actualizar estudiante: {str(e)}")
+        input("\nPresione Enter para continuar...")
+
+    def search_student(self):
+        print("Funcionalidad de búsqueda de estudiantes en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
+    def list_students(self):
+        self.display_header("LISTADO DE ESTUDIANTES")
+        try:
+            students = self.crud.student.list_students()
+            
+            if not students:
+                print("No hay estudiantes registrados.")
+            else:
+                print("{:<5} {:<20} {:<20} {:<30} {:<15}".format("ID", "Nombres", "Apellidos", "Email", "Carrera"))
+                print("-" * 90)
+                for student in students:
+                    carrera_nombre = student.major.nombre if student.major else "Sin carrera"
+                    print("{:<5} {:<20} {:<20} {:<30} {:<15}".format(
+                        student.id,
+                        student.nombre,
+                        student.apellido,
+                        student.email,
+                        carrera_nombre
+                    ))
+        except Exception as e:
+            print(f"\n❌ Error al listar estudiantes: {str(e)}")
+        input("\nPresione Enter para continuar...")
+
     def course_menu(self):
         while True:
             self.display_header("GESTIÓN DE CURSOS")
@@ -247,17 +343,29 @@ class UniversitySystem:
             description = self.get_input("Descripción (opcional): ", required=False)
             
             course = self.crud.course.create_course(
-                code=code,
-                name=name,
-                credits=credits,
-                major_id=major_id,
-                description=description
+                codigo=code,
+                nombre=name,
+                creditos=credits,
+                carrera_id=major_id,
+                descripcion=description
             )
-            print(f"\nCurso '{course.name}' creado exitosamente con código: {course.code}")
+            print(f"\nCurso '{course.nombre}' creado exitosamente con código: {course.codigo}")
         except Exception as e:
             print(f"\nError al crear curso: {str(e)}")
         input("\nPresione Enter para continuar...")
     
+    def assign_professor(self):
+        print("Funcionalidad de asignación de profesores en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
+    def schedule_course(self):
+        print("Funcionalidad de programación de horarios en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
+    def list_courses(self):
+        print("Funcionalidad de listado de cursos en desarrollo...")
+        input("\nPresione Enter para continuar...")
+
     def reports_menu(self):
         while True:
             self.display_header("REPORTES")
@@ -280,19 +388,188 @@ class UniversitySystem:
     def students_by_major_report(self):
         self.display_header("ESTUDIANTES POR CARRERA")
         try:
-            filename = "reporte_estudiantes_carrera.csv"
-            print("Generando reporte...")
+            from reports import ReportGenerator
             
-            # Simulación de generación de reporte
-            print(f"\nReporte generado exitosamente: {filename}")
-            print("Contenido del reporte:")
-            print("-" * 50)
-            print("ID, Nombre, Carrera, Semestre, Estado")
-            print("1, Juan Pérez, Ingeniería, Primer Semestre, Activo")
-            print("2, María Gómez, Medicina, Segundo Semestre, Activo")
-            print("-" * 50)
+            print("Filtros disponibles (deje en blanco para omitir):")
+            major_id = self.get_input("ID de carrera: ", input_type=int, required=False)
+            status = self.get_input("Estado: ", required=False)
+            year_from = self.get_input("Año desde: ", input_type=int, required=False)
+            year_to = self.get_input("Año hasta: ", input_type=int, required=False)
+            age_min = self.get_input("Edad mínima: ", input_type=int, required=False)
+            
+            # ALTERNATIVA: Si no hay datos, crear datos de ejemplo
+            data = ReportGenerator.students_by_faculty_report(
+                faculty_id=major_id,
+                status=status,
+                year_from=year_from,
+                year_to=year_to,
+                age_min=age_min
+            )
+            
+            if not data:
+                print("⚠️ No hay datos reales. Generando datos de ejemplo...")
+                # Crear datos de ejemplo para demostración
+                sample_data = [
+                    {
+                        'id': 1,
+                        'nombre': 'Juan',
+                        'apellido': 'Pérez',
+                        'carrera': 'Ciencias de la Computación',
+                        'facultad': 'Ingeniería',
+                        'fecha_ingreso': '2023-01-15',
+                        'estado': 'Activo'
+                    },
+                    {
+                        'id': 2,
+                        'nombre': 'María',
+                        'apellido': 'González',
+                        'carrera': 'Medicina General',
+                        'facultad': 'Medicina',
+                        'fecha_ingreso': '2023-01-20',
+                        'estado': 'Activo'
+                    }
+                ]
+                
+                filename = f"estudiantes_carrera_ejemplo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                
+                import csv
+                with open(filename, 'w', newline='', encoding='utf-8') as file:
+                    if sample_data:
+                        writer = csv.DictWriter(file, fieldnames=sample_data[0].keys())
+                        writer.writeheader()
+                        writer.writerows(sample_data)
+                
+                print(f"\n✅ Datos de ejemplo exportados: {filename}")
+                print("📝 Nota: Este es un reporte de demostración con datos sintéticos")
+            else:
+                filename = f"estudiantes_carrera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                ReportGenerator.export_to_csv(data, filename)
+                print(f"\n✅ Reporte exportado: {filename}")
+            
         except Exception as e:
-            print(f"\nError al generar reporte: {str(e)}")
+            print(f"❌ Error: {str(e)}")
+        input("\nPresione Enter para continuar...")
+
+    def courses_by_semester_report(self):
+        self.display_header("CURSOS POR SEMESTRE")
+        print("✅ Generando reporte de ejemplo...")
+        
+        # Datos de ejemplo para demostración
+        sample_data = [
+            {
+                'curso_id': 1,
+                'codigo': 'CC3001',
+                'nombre': 'Algoritmos y Estructuras de Datos',
+                'creditos': 4,
+                'semestre': 'Primer Semestre',
+                'estudiantes_matriculados': 25
+            },
+            {
+                'curso_id': 2,
+                'codigo': 'CC3088',
+                'nombre': 'Bases de Datos',
+                'creditos': 4,
+                'semestre': 'Primer Semestre',
+                'estudiantes_matriculados': 30
+            }
+        ]
+        
+        filename = f"cursos_semestre_ejemplo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        import csv
+        with open(filename, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=sample_data[0].keys())
+            writer.writeheader()
+            writer.writerows(sample_data)
+        
+        print(f"\n✅ Reporte de ejemplo exportado: {filename}")
+        print("📝 Nota: Este es un reporte de demostración con datos sintéticos")
+        input("\nPresione Enter para continuar...")
+
+    def active_enrollments_report(self):
+        self.display_header("MATRÍCULAS ACTIVAS")
+        print("✅ Generando reporte de ejemplo...")
+        
+        # Datos de ejemplo
+        sample_data = [
+            {
+                'matricula_id': 1,
+                'estudiante_nombre': 'Juan Pérez',
+                'curso_nombre': 'Bases de Datos',
+                'semestre': 'Primer Semestre',
+                'estado': 'Activa',
+                'fecha_matricula': '2025-01-15'
+            },
+            {
+                'matricula_id': 2,
+                'estudiante_nombre': 'María González',
+                'curso_nombre': 'Algoritmos',
+                'semestre': 'Primer Semestre',
+                'estado': 'Activa',
+                'fecha_matricula': '2025-01-16'
+            }
+        ]
+        
+        filename = f"matriculas_activas_ejemplo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        import csv
+        with open(filename, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=sample_data[0].keys())
+            writer.writeheader()
+            writer.writerows(sample_data)
+        
+        print(f"\n✅ {len(sample_data)} matrículas de ejemplo exportadas: {filename}")
+        print("📝 Nota: Este es un reporte de demostración con datos sintéticos")
+        input("\nPresione Enter para continuar...")
+
+    def pending_payments_report(self):
+        print("Reporte de pagos pendientes en desarrollo...")
+        input("\nPresione Enter para continuar...")
+    
+    def students_faculty_report(self):
+        self.display_header("REPORTE: ESTUDIANTES POR FACULTAD")
+        try:
+            from reports import ReportGenerator
+            
+            # Obtener filtros del usuario
+            print("Filtros disponibles (deje en blanco para omitir):")
+            faculty_id = self.get_input("ID de facultad: ", input_type=int, required=False)
+            status = self.get_input("Estado (Activo/Inactivo/Graduado): ", required=False)
+            year_from = self.get_input("Año de ingreso desde: ", input_type=int, required=False)
+            year_to = self.get_input("Año de ingreso hasta: ", input_type=int, required=False)
+            age_min = self.get_input("Edad mínima: ", input_type=int, required=False)
+            
+            # Generar reporte
+            data = ReportGenerator.students_by_faculty_report(
+                faculty_id=faculty_id,
+                status=status,
+                year_from=year_from,
+                year_to=year_to,
+                age_min=age_min
+            )
+            
+            if data:
+                print(f"\n✅ Se encontraron {len(data)} estudiantes.")
+                
+                # Mostrar preview de los primeros 5 registros
+                print("\nVista previa (primeros 5 registros):")
+                print("-" * 80)
+                for i, row in enumerate(data[:5]):
+                    print(f"{i+1}. {row.nombre} {row.apellido} - {row.facultad} - {row.estado}")
+                
+                if len(data) > 5:
+                    print(f"... y {len(data) - 5} registros más")
+                
+                # Exportar a CSV
+                filename = f"estudiantes_facultad_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                result_message = ReportGenerator.export_to_csv(data, filename)
+                print(f"\n📄 {result_message}")
+            else:
+                print("❌ No se encontraron datos con los filtros especificados.")
+                
+        except Exception as e:
+            print(f"❌ Error generando reporte: {str(e)}")
+        
         input("\nPresione Enter para continuar...")
     
     def run(self):
