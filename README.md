@@ -61,7 +61,28 @@ Crear archivo `.env` en la raíz del proyecto:
 DATABASE_URL=postgresql://postgres:TU_PASSWORD@localhost:5432/proyecto4_sgu
 ```
 
-### 7. Ejecutar aplicación
+### 7. Generar datos de prueba (Obligatorio)
+```bash
+cd src
+python data_generator.py
+```
+**Resultado esperado:**
+```
+🚀 Iniciando generación de datos de prueba...
+✅ Datos existentes limpiados
+✅ 10 facultades creadas
+✅ 28 departamentos creados
+✅ 32 carreras creadas
+✅ 200 profesores creados
+✅ 1000 estudiantes creados
+✅ 245 cursos creados
+✅ 1,500+ matrículas creadas
+
+🎯 Generación completada exitosamente!
+📊 Total: 3,000+ registros de prueba coherentes
+```
+
+### 8. Ejecutar aplicación
 ```bash
 cd src
 python main.py
@@ -76,6 +97,7 @@ proyecto4_BD/
 ├── src/
 │   ├── models.py           # Modelos SQLAlchemy ORM
 │   ├── cruds.py           # Operaciones CRUD
+│   ├── data_generator.py  # Generador de datos de prueba
 │   ├── main.py            # Interfaz principal
 │   └── reports.py         # Generador de reportes
 ├── reports/               # Reportes CSV generados
@@ -131,28 +153,43 @@ proyecto4_BD/
 
 ## Uso de la Aplicación
 
+### ⚠️ Prerequisito: Datos de Prueba
+**IMPORTANTE**: Antes de usar la aplicación, ejecutar:
+```bash
+cd src
+python data_generator.py
+```
+Sin datos de prueba, los reportes estarán vacíos y las funcionalidades limitadas.
+
 ### Menú Principal
 ```
 1. Gestión Académica
-   ├── Gestión de Facultades
-   ├── Gestión de Estudiantes  
-   └── Gestión de Profesores
+   ├── Gestión de Facultades (10 registros disponibles)
+   ├── Gestión de Estudiantes (1,000 registros disponibles)
+   └── Gestión de Profesores (200 registros disponibles)
 2. Reportes
-   ├── Estudiantes por Carrera
-   ├── Cursos por Semestre
-   └── Matrículas Activas
+   ├── Estudiantes por Carrera (32 carreras disponibles)
+   ├── Cursos por Semestre (245 cursos disponibles)
+   └── Matrículas Activas (1,500+ matrículas disponibles)
 3. Salir
 ```
 
-### Ejemplo de Uso
+### Flujo de Trabajo Recomendado
 ```bash
-# Ejecutar aplicación
-python src/main.py
+# 1. Configurar base de datos
+psql -U postgres -d proyecto4_sgu -f database/schema.sql
 
-# Crear nueva facultad
-Gestión Académica > Gestión de Facultades > Crear Facultad
+# 2. Generar datos de prueba
+cd src
+python data_generator.py
 
-# Generar reporte
+# 3. Ejecutar aplicación
+python main.py
+
+# 4. Explorar datos existentes
+Gestión Académica > Gestión de Facultades > Listar Todas
+
+# 5. Generar reportes con filtros
 Reportes > Estudiantes por Carrera > [Aplicar filtros] > Exportar CSV
 ```
 
@@ -161,6 +198,7 @@ Reportes > Estudiantes por Carrera > [Aplicar filtros] > Exportar CSV
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 python-dotenv==1.0.0
+faker==20.1.0              # Generación de datos realistas
 ```
 
 ## Base de Datos
@@ -213,6 +251,30 @@ python-dotenv==1.0.0
 - **Decisión**: ORM exclusivo según requerimientos del proyecto
 
 ## Solución de Problemas
+
+### Error en data_generator.py
+```bash
+# Error: ENUM no válido
+# Verificar valores permitidos:
+psql -U postgres -d proyecto4_sgu -c "
+SELECT enumlabel FROM pg_enum 
+WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'tipo_semestre');"
+
+# Error: CHECK constraint violado
+# Verificar restricciones:
+psql -U postgres -d proyecto4_sgu -c "
+SELECT pg_get_constraintdef(oid) 
+FROM pg_constraint 
+WHERE conname LIKE '%check%';"
+```
+
+### Regenerar datos
+```bash
+# Limpiar y regenerar todos los datos
+cd src
+python data_generator.py
+# Los datos existentes se eliminan automáticamente
+```
 
 ### Error de conexión a BD
 ```bash

@@ -64,12 +64,14 @@ class Major(Base):
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100), nullable=False)
     facultad_id = Column(Integer, ForeignKey('facultad.id'), nullable=False)
-    titulo = Column(String(50))
+    duracion_anos = Column(Integer, nullable=False)
+    creditos_totales = Column(Integer, nullable=False)  # ← AGREGAR ESTA LÍNEA
+    titulo = Column(String(50))  # Es nullable según tu schema
     
     # Relationships
     faculty = relationship("Faculty", back_populates="majors")
     students = relationship("Student", back_populates="major")
-    courses = relationship("Course", back_populates="major")
+    courses = relationship("Course", back_populates="major")  # ← AGREGAR ESTA LÍNEA
 
 class Student(Base):
     __tablename__ = 'estudiante'
@@ -109,16 +111,14 @@ class Course(Base):
     __tablename__ = 'curso'
     
     id = Column(Integer, primary_key=True)
-    codigo = Column(String(10), unique=True, nullable=False)
+    codigo = Column(String(20), unique=True, nullable=False)
     nombre = Column(String(100), nullable=False)
     creditos = Column(Integer, nullable=False)
     descripcion = Column(Text)
     carrera_id = Column(Integer, ForeignKey('carrera.id'), nullable=False)
-    prerequisito_id = Column(Integer, ForeignKey('curso.id'))
-    departamento_id = Column(Integer, ForeignKey('departamento.id'))
     
     # Relationships
-    major = relationship("Major", back_populates="courses")
+    major = relationship("Major", back_populates="courses")  # ← VERIFICAR ESTA LÍNEA
     enrollments = relationship("Enrollment", back_populates="course")
 
 class Enrollment(Base):
